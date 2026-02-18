@@ -28,8 +28,8 @@ def sigmoid(z):
     Returns:
         scalar output in (0, 1)
     """
-    raise NotImplementedError("TODO: implement sigmoid")
-
+    sigmoid_z = 1/(1 + torch.exp(-z))
+    return sigmoid_z
 
 def forward(x, w, b):
     """
@@ -46,10 +46,10 @@ def forward(x, w, b):
     Returns:
         scalar prediction in (0, 1)
     """
-    z = None  # TODO: compute z = w · x + b
-    y_hat = None  # TODO: apply sigmoid to z
-    raise NotImplementedError("TODO: implement forward pass")
-
+    z = torch.dot(w, x) + b 
+    y_hat = sigmoid(z)  
+    return y_hat
+    
 
 def compute_loss(y, y_hat):
     """
@@ -64,7 +64,8 @@ def compute_loss(y, y_hat):
     Returns:
         scalar loss
     """
-    raise NotImplementedError("TODO: implement compute_loss")
+    L = (1/2)*(y_hat - y)**2
+    return L
 
 
 def compute_gradients(x, y, y_hat):
@@ -87,14 +88,14 @@ def compute_gradients(x, y, y_hat):
         dw: (n,) gradient for weights
         db: scalar gradient for bias
     """
-    error = None  # TODO: compute error = ŷ - y
-    sigmoid_deriv = None  # TODO: compute sigmoid derivative = ŷ(1 - ŷ)
-    delta = None  # TODO: compute δ = error × sigmoid_deriv
+    error = y_hat-y  
+    sigmoid_deriv = y_hat*(1-y_hat)  
+    delta = error * sigmoid_deriv 
 
-    dw = None  # TODO: compute ∂L/∂w = δ × x
-    db = None  # TODO: compute ∂L/∂b = δ
+    dw = delta * x  
+    db = delta  
 
-    raise NotImplementedError("TODO: implement compute_gradients")
+    return dw, db
 
 
 # =============================================================================
@@ -123,6 +124,9 @@ def load_data():
     std = X_train.std(dim=0)
     X_train_norm = (X_train - mean) / std
     X_test_norm = (X_test - mean) / std
+
+    # Print Feature Names
+    print(data.feature_names)
     
     return X_train_norm, X_test_norm, y_train, y_test, data.feature_names
 
@@ -162,17 +166,17 @@ def train(X_train, y_train, alpha=0.01, n_epochs=100, verbose=True):
             y_i = y_train[i]
             
             # Forward pass: compute prediction for this sample
-            y_hat = None  # TODO: call forward()
+            y_hat = forward(x_i, w, b) 
 
             # Compute loss
             epoch_loss += compute_loss(y_i, y_hat).item()
 
             # Compute gradients
-            dw, db = None, None  # TODO: call compute_gradients()
+            dw, db = compute_gradients(x_i, y_i, y_hat) 
 
             # Update parameters using gradient descent
-            w = None  # TODO: update w
-            b = None  # TODO: update b
+            w = w - alpha*dw 
+            b = b - alpha*db
         
         avg_loss = epoch_loss / len(y_train)
         losses.append(avg_loss)
@@ -232,6 +236,7 @@ if __name__ == "__main__":
     
     print(f"Training accuracy: {train_acc:.4f}")
     print(f"Test accuracy: {test_acc:.4f}")
+
     
     # Plot
     fig, axes = plt.subplots(1, 2, figsize=(12, 4))
